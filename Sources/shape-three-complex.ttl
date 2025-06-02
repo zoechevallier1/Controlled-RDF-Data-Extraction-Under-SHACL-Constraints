@@ -1,0 +1,61 @@
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix ex: <http://example.com/ns#> .
+
+ex:ExampleShape
+    a sh:NodeShape ;
+    sh:targetClass ex:ExampleClass;
+    sh:property ex:randomPropertyShape;
+    sh:property ex:anotherRandomPropertyShape;
+    sh:property ex:firstConnectingProperty;
+    sh:property ex:secondConnectingProperty.
+
+ex:randomPropertyShape a sh:PropertyShape;
+        sh:path ex:randomProperty ;
+        sh:datatype xsd:string;
+        sh:minLength 2;
+        sh:maxLength 8.
+
+ex:anotherRandomPropertyShape a sh:PropertyShape;
+        sh:path ex:anotherRandomProperty ;
+        sh:minCount 3 ;
+        sh:maxCount 6 .
+
+ex:firstConnectingPropertyShape a sh:PropertyShape;
+        sh:path ex:firstConnectingProperty ;
+        sh:minCount 1 ;
+        sh:maxCount 1 .
+
+ex:secondConnectingPropertyShape a sh:PropertyShape;
+        sh:path ex:secondConnectingProperty ;
+        sh:minCount 1 ;
+        sh:maxCount 1 .
+
+ex:AddressShape
+    a sh:NodeShape ;
+    sh:targetClass ex:Address;
+    sh:property ex:addressValueShape.
+
+ex:addressValueShape a sh:PropertyShape;
+        sh:path ex:addressValue ;
+        sh:datatype xsd:string ;
+        sh:minLength 6 ;
+        sh:maxLength 16 ;
+        sh:minCount 1 ;
+        sh:maxCount 2 .
+
+ex:DateShape
+    a sh:NodeShape ;
+    sh:targetClass ex:Date;
+    sh:property sh:date1Shape;
+    sh:property sh:date2Shape.
+
+ex:date1Shape a sh:PropertyShape;
+        sh:path ex:date1 ;
+        sh:lessThan ex:date2 .
+
+ex:date2Shape a sh:PropertyShape;
+        sh:path ex:date2 ;
+        sh:minInclusive "2025-02-03"^^xsd:date ;
+        sh:maxInclusive "2025-05-13"^^xsd:date .

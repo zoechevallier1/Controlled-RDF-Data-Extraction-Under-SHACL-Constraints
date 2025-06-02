@@ -1,0 +1,71 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+schema:PersonShape
+    a sh:NodeShape ;
+    sh:targetClass schema:Person ;
+    sh:xone (schema:elt1 schema:elt2);
+    sh:property schema:birthDateShape;
+    sh:property schema:genderShape;
+    sh:property schema:emailShape;
+    sh:property schema:jobTitleShape.
+
+schema:elt1 a sh:NodeShape; 
+        sh:property schema:givenNameShape;
+        sh:property schema:familyNameShape.
+
+schema:elt2 a sh:PropertyShape; 
+            sh:path schema:name ;
+            sh:datatype xsd:string ;
+            sh:name "full name".
+
+schema:givenNameShape a sh:PropertyShape;
+                sh:path schema:givenName ;
+                sh:datatype xsd:string ;
+                sh:name "given name".
+
+schema:familyNameShape a sh:PropertyShape;
+                sh:path schema:familyName ;
+                sh:datatype xsd:string ;
+                sh:name "last name".
+
+schema:birthDateShape a sh:PropertyShape; 
+        sh:path schema:birthDate ;
+        sh:lessThan schema:deathDate ;
+        sh:minCount 1 ;
+        sh:maxCount 1.
+
+schema:genderShape a sh:PropertyShape; 
+        sh:path schema:gender ;
+        sh:in ( "female" "male" ).
+
+schema:emailShape a sh:PropertyShape;
+        sh:path schema:email.
+
+schema:jobTitleShape a sh:PropertyShape;
+        sh:path schema:jobTitle.
+
+schema:telephoneShape a sh:PropertyShape; 
+        sh:path schema:telephone.
+
+schema:addressShape a sh:PropertyShape; 
+        sh:path schema:address.
+
+schema:AddressShape
+    a sh:NodeShape ;
+    sh:targetClass schema:Address;
+    sh:property schema:streetAddressShape;
+    sh:property schema:postalCodeShape.
+
+schema:streetAddressShape a sh:PropertyShape;
+        sh:path schema:streetAddress ;
+        sh:datatype xsd:string.
+
+schema:postalCodeShape a sh:PropertyShape; 
+        sh:path schema:postalCode ;
+        sh:or ( [ sh:datatype xsd:string ] [ sh:datatype xsd:integer ] ) ;
+        sh:minInclusive 10000 ;
+        sh:maxInclusive 99999.

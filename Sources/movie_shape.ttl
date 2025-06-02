@@ -1,0 +1,65 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+schema:MovieShape
+    a sh:NodeShape ;
+    sh:targetClass schema:Movie;
+    sh:property schema:directorShape;
+    sh:property schema:awardShape;
+    sh:property schema:nameShape;
+    sh:property schema:dateCreatedShape;
+    sh:property schema:datePublishedShape;
+    sh:property schema:genreShape;
+    sh:property schema:inLanguageShape.
+
+schema:directorShape a sh:PropertyShape;
+            sh:path schema:director.
+
+schema:awardShape a sh:PropertyShape;
+    sh:path schema:award.
+
+schema:nameShape a sh:PropertyShape;
+    sh:path schema:name ;
+        sh:datatype xsd:string ;
+        sh:minCount 1.
+
+schema:dateCreatedShape a sh:PropertyShape;
+        sh:path schema:dateCreated ;
+        sh:datatype xsd:date.
+
+schema:datePublishedShape a sh:PropertyShape;
+    sh:path schema:datePublished.
+
+schema:genre a sh:PropertyShape;
+    sh:path schema:genre ;
+        sh:minCount 1.
+
+schema:inLanguageShape a sh:PropertyShape;
+        sh:path schema:inLanguage ;
+        sh:minCount 1.
+
+schema:DirectorShape
+  sh:targetClass schema:Person ;
+  a sh:NodeShape ;
+  sh:property schema:givenNameShape;
+  sh:property schema:genderShape;
+  sh:property schema:emailShape;
+  sh:property schema:telephoneShape.
+
+schema:givenNameShape a sh:PropertyShape;
+    sh:path schema:givenName ;
+    sh:datatype xsd:string ;
+    sh:name "given name".
+
+schema:genderShape a sh:PropertyShape;
+        sh:path schema:gender ;
+        sh:in ( "female" "male" ).
+
+schema:emailShape a sh:PropertyShape;
+        sh:path schema:email.
+
+schema:telephoneShape a sh:PropertyShape;
+    sh:path schema:telephone.

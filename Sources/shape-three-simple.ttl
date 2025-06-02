@@ -1,0 +1,50 @@
+@prefix schema: <http://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix ex: <http://example.com/ns#> .
+
+ex:ExampleShape 
+    a sh:NodeShape ;
+    sh:targetClass ex:ExampleClass;
+    sh:property ex:randomPropertyShape;
+    sh:property ex:firstConnectingPropertyShape;
+    sh:property ex:secondConnectingPropertyShape.
+    
+ex:randomPropertyShape a sh:PropertyShape;
+    sh:path ex:randomProperty ;
+        sh:datatype xsd:string;
+        sh:minLength 2;
+        sh:maxLength 8.
+
+ex:firstConnectingPropertyShape a sh:PropertyShape;
+    sh:path ex:firstConnectingProperty ;
+    sh:minCount 1 ;
+    sh:maxCount 1 .
+
+ex:secondConnectingPropertyShape a sh:PropertyShape;
+    sh:path ex:secondConnectingProperty ;
+    sh:minCount 1 ;
+    sh:maxCount 1 .
+
+
+ex:AddressShape
+    a sh:NodeShape ;
+    sh:targetClass ex:Address;
+    sh:property ex:addressValueShape.
+
+ex:addressValueShape a sh:PropertyShape;
+    sh:path ex:addressValue ;
+        sh:datatype xsd:string ;
+        sh:minLength 6 ;
+        sh:maxLength 16.
+
+ex:PhoneShape
+    a sh:NodeShape ;
+    sh:targetClass ex:Phone;
+    sh:property ex:phoneValueShape.
+
+ex:phoneValueShape a sh:PropertyShape;
+    sh:path ex:phoneValue ;
+        sh:datatype xsd:integer ;
+        sh:minLength 6 ;
+        sh:maxLength 12 .

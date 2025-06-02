@@ -1,8 +1,9 @@
 from rdflib import Graph, URIRef, BNode
 import time
 import statistics
+import argparse
 
-
+# Function to resolve constraints for Property Shapes
 def property_shape_resolution(targetSchema, PS, Prop_m, Prop_o):
     queryTargetedProperty =  f"""
     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -69,15 +70,15 @@ def property_shape_resolution(targetSchema, PS, Prop_m, Prop_o):
             for i in range(len(logical_parts)):
                 inner_parts = []
                 for j, c in enumerate(logical_parts):
-                    if c:  # Vérifie que c n'est pas une chaîne vide
+                    if c: 
                         if i == j:
                             inner_parts.append(f"({c})")
                         else:
                             inner_parts.append(f"!({c})")
-                if inner_parts:  # Vérifie que inner_parts n'est pas vide
+                if inner_parts:  
                     xone_parts.append(" && ".join(inner_parts))
             
-            if xone_parts:  # Vérifie que xone_parts n'est pas vide
+            if xone_parts:  
                 parts.append(f"({' || '.join(f'({part})' for part in xone_parts if part)})")
 
 
@@ -97,6 +98,7 @@ def property_shape_resolution(targetSchema, PS, Prop_m, Prop_o):
     
     return f"({' && '.join([p for p in parts if p])})" if any(parts) else ""
 
+# Function to resolve constraints for Node Shapes
 def node_shape_resolution(targetSchema, NS, Prop_m, Prop_o):
 
     parts = []
@@ -153,15 +155,15 @@ def node_shape_resolution(targetSchema, NS, Prop_m, Prop_o):
             for i in range(len(logical_parts)):
                 inner_parts = []
                 for j, c in enumerate(logical_parts):
-                    if c:  # Vérifie que c n'est pas une chaîne vide
+                    if c:  
                         if i == j:
                             inner_parts.append(f"({c})")
                         else:
                             inner_parts.append(f"!({c})")
-                if inner_parts:  # Vérifie que inner_parts n'est pas vide
+                if inner_parts:  
                     xone_parts.append(" && ".join(inner_parts))
             
-            if xone_parts:  # Vérifie que xone_parts n'est pas vide
+            if xone_parts: 
                 parts.append(f"({' || '.join(f'({part})' for part in xone_parts if part)})")
 
 
@@ -186,12 +188,17 @@ def node_shape_resolution(targetSchema, NS, Prop_m, Prop_o):
 
 def generate_extraction_query(targetSchema, C, Prop_m, Prop_o):
     """
-    Fonction principale générant la requête SPARQL d'extraction.
-    Combine la section CONSTRUCT, la clause WHERE et les contraintes issues
-    des NodeShapes et PropertyShapes.
+    Principal Function to generate the SPARQL extraction query.
+    Combines the CONSTRUCT section, the WHERE clause, and constraints from
+    NodeShapes and PropertyShapes.
+    :param targetSchema: The RDF graph containing the SHACL shapes.
+    :param C: The target class for which the extraction is performed.
+    :param Prop_m: Mandatory properties to extract.
+    :param Prop_o: Optional properties to extract.
+    :return: A SPARQL CONSTRUCT query string.
     """
     parts = []
-    # Préambule et section CONSTRUCT
+    # Namespace declarations & CONSTRUCT clause
     parts.append("PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>")
     parts.append("PREFIX sh: <http://www.w3.org/ns/shacl#>")
     parts.append(f"CONSTRUCT {{ ?e rdf:type <{C}> .")
@@ -214,7 +221,7 @@ def generate_extraction_query(targetSchema, C, Prop_m, Prop_o):
     props_filter = ", ".join(f"<{p}>" for p in Prop_m + Prop_o)
     parts.append(f"MINUS {{ ?e ?prop ?o . FILTER (?prop NOT IN ({props_filter})) }} \n")
     
-    # Récupération des NodeShapes en filtrant sur la classe cible C
+    # NodeShapes that target class C
     nodeShapes = []
     queryTargetClass = f"""
     PREFIX sh: <http://www.w3.org/ns/shacl#>
@@ -223,7 +230,6 @@ def generate_extraction_query(targetSchema, C, Prop_m, Prop_o):
     for r in execute_query(queryTargetClass, targetSchema):
         nodeShapes.append(r[0])
     
-    # Récupération des NodeShapes via targetSubjectsOf pour chacune des propriétés
     for p in Prop_m + Prop_o:
         queryTargetSubjectsOf = f"""
         PREFIX sh: <http://www.w3.org/ns/shacl#>
@@ -232,7 +238,7 @@ def generate_extraction_query(targetSchema, C, Prop_m, Prop_o):
         for r in execute_query(queryTargetSubjectsOf, targetSchema):
             nodeShapes.append(r[0])
     
-    # Intégration des contraintes NodeShapes
+    # Integration of NodeShapes Constraints
     for NS in nodeShapes:
         ns_filter = node_shape_resolution(targetSchema, NS, Prop_m, Prop_o)
         if ns_filter:
@@ -241,7 +247,12 @@ def generate_extraction_query(targetSchema, C, Prop_m, Prop_o):
     parts.append("}")
     return "\n".join(parts)
 
+
 def format_resource(r):
+    """
+    Format a resource for SPARQL queries.
+    :param r: The resource to format, can be a BNode or URIRef. 
+    """
     if isinstance(r,BNode):
         return r.n3()
     elif isinstance(r,URIRef):
@@ -249,19 +260,22 @@ def format_resource(r):
     else :
         return f'<{str(r)}>'
     
-
 def execute_query(query, targetSchema):
     """
     Execute a SPARQL Query
+    :param query: The SPARQL query string to execute.
+    :param targetSchema: The RDF graph to query.
     """
     return list(targetSchema.query(query))
 
-
 def basic_constraint_resolution(p, propsh, k, Prop_m, Prop_o):
-    propsh = str(propsh)
     """
     Resolution of a basic constraint on property p from (propsh, k) constraint
+    :param p: The property to resolve.
+    :param propsh: The constraint property
+    :param k: The value of propsh constraint.
     """
+    propsh = str(propsh)
     shortprop = p.split('#')[1] if '#' in p else p.split('/')[-1]
     resolution = ""
     
@@ -326,149 +340,222 @@ def basic_constraint_resolution(p, propsh, k, Prop_m, Prop_o):
     return resolution
 
 
+def main():
+    parser = argparse.ArgumentParser(description="Mon script avec paramètres")
+    parser.add_argument("--input", type=str, required=True, help="book, movie, person, product, tvseries,one_simple, one_complex, three_simple, three_complex, runningExample")
+    
+    args = parser.parse_args()
+
+    targetSchema = Graph()
+    if args.input not in ["book", "movie", "person", "product", "tvseries", "runningExample", "one_simple", "one_complex", "three_simple", "three_complex"]:
+        print("This configuration is not none. Please enter a valid configuration.")
+        return
+    elif args.input == "book":
+        pathShapes = "/Sources/book_shape.ttl"
+        C1 = "http://schema.org/Book"
+        Prop_m1 = ["http://schema.org/identifier", "http://schema.org/name", "http://schema.org/bookEdition", "http://schema.org/isbn",
+                    "http://schema.org/numberOfPages", "http://schema.org/author", "http://schema.org/dateCreated", "http://schema.org/datePublished",
+                    "http://schema.org/genre", "http://schema.org/award", "http://schema.org/inLanguage"]
+        Prop_o1 = []
+        C2 = "http://schema.org/Person"
+        Prop_m2 = ["http://schema.org/givenName", "http://schema.org/bithDate", "http://schema.org/gender",  "http://schema.org/email",
+                    "http://schema.org/telephone"]
+        Prop_o2 = [ "http://schema.org/deathDate"]
+
+        targetSchema.parse(pathShapes, format="ttl")
+        # Skolemise le graphe pour remplacer les blank nodes par des IRIs stables.
+        targetSchema = targetSchema.skolemize()
+
+        extraction_query1 = generate_extraction_query(targetSchema, C1, Prop_m1, Prop_o1)
+        extraction_query2 = generate_extraction_query(targetSchema, C2, Prop_m2, Prop_o2)
+
+        print("Query Generatd for target class Book: \n" + str(extraction_query1) + "\n\n")
+        print("Query Generatd for target class Person: \n" + str(extraction_query2) + "\n\n")
+
+
+    elif args.input == "movie":
+        pathShapes = "/Sources/movie_shape.ttl"
+        C1 = "http://schema.org/Movie"
+        Prop_m1 = ["http://schema.org/director", "http://schema.org/award", "http://schema.org/name", "http://schema.org/dateCreated",
+                "http://schema.org/datePublished","http://schema.org/genre","http://schema.org/inLanguage"]
+        Prop_o1 = []
+        C2 = "http://schema.org/Person"
+        Prop_m2 = ["http://schema.org/givenName", "http://schema.org/gender",  "http://schema.org/email",
+                "http://schema.org/telephone"]
+        Prop_o2 = []
+
+        targetSchema.parse(pathShapes, format="ttl")
+        # Skolemise le graphe pour remplacer les blank nodes par des IRIs stables.
+        targetSchema = targetSchema.skolemize()
+        extraction_query1 = generate_extraction_query(targetSchema, C1, Prop_m1, Prop_o1)
+        extraction_query2 = generate_extraction_query(targetSchema, C2, Prop_m2, Prop_o2)
+
+        print("Query Generatd for target class Movie: \n" + str(extraction_query1) + "\n\n")
+        print("Query Generatd for target class Person: \n" + str(extraction_query2) + "\n\n")
+
+    elif args.input == "person":
+        pathShapes = "/Sources/person_shape.ttl"
+        C1 = "http://schema.org/Address"
+        Prop_m1 = ["http://schema.org/streetAddress", "http://schema.org/postalCode"]
+        Prop_o1 = []
+        C2 = "http://schema.org/Person"
+        Prop_m2 = ["http://schema.org/givenName", "http://schema.org/name","http://schema.org/familyName", "http://schema.org/bithDate",
+                "http://schema.org/gender",  "http://schema.org/email", "http://schema.org/jobTitle", "http://schema.org/address",
+                "http://schema.org/telephone"]
+        Prop_o2 = [ "http://schema.org/deathDate"]
+
+        targetSchema.parse(pathShapes, format="ttl")
+        # Skolemise le graphe pour remplacer les blank nodes par des IRIs stables.
+        targetSchema = targetSchema.skolemize()
+
+        extraction_query1 = generate_extraction_query(targetSchema, C1, Prop_m1, Prop_o1)
+        extraction_query2 = generate_extraction_query(targetSchema, C2, Prop_m2, Prop_o2)
+
+        print("Query Generatd for target class Address: \n" + str(extraction_query1) + "\n\n")
+        print("Query Generatd for target class Person: \n" + str(extraction_query2) + "\n\n")
+
+
+    elif args.input == "product":
+        pathShapes = "/Sources/example_product_shape.ttl"
+        C1 = "http://example.com/ns#Product"
+        Prop_m1 = ["http://example.com/ns#identifier", "http://example.com/ns#name", "http://example.com/ns#dateOrProduction","http://example.com/ns#dateOfExpiration"]
+        Prop_o1 = []
+
+        targetSchema.parse(pathShapes, format="ttl")
+        # Skolemise le graphe pour remplacer les blank nodes par des IRIs stables.
+        targetSchema = targetSchema.skolemize()
+
+        extraction_query1 = generate_extraction_query(targetSchema, C1, Prop_m1, Prop_o1)
+        print("Query Generatd for target class Product: \n" + str(extraction_query1) + "\n\n")
+
+    elif args.input == "tvseries":
+        pathShapes = "/Sources/tv_series_shape.ttl"
+        C1 = "http://schema.org/TVSeries"
+        Prop_m1 = ["http://schema.org/director", "http://schema.org/actor", "http://schema.org/season","http://schema.org/numberOfEpisodes",
+                "http://schema.org/numberOfSeasons","http://schema.org/startDate", "http://schema.org/endDate", "http://schema.org/datePublished", 
+                "http://schema.org/genre", "http://schema.org/titleEIDR","http://schema.org/name"]
+        Prop_o1 = []
+        C2 = "http://schema.org/Person"
+        Prop_m2 = ["http://schema.org/givenName", "http://schema.org/familyName","http://schema.org/gender",  
+                    "http://schema.org/email", "http://schema.org/telephone"]
+        Prop_o2 = []
+
+        C3 = "http://schema.org/Person"
+        Prop_m3 = ["http://schema.org/gender","http://schema.org/name"]
+        Prop_o3 = []
+        
+        targetSchema.parse(pathShapes, format="ttl")
+        # Skolemise le graphe pour remplacer les blank nodes par des IRIs stables.
+        targetSchema = targetSchema.skolemize()
+
+        extraction_query1 = generate_extraction_query(targetSchema, C1, Prop_m1, Prop_o1)
+        extraction_query2 = generate_extraction_query(targetSchema, C2, Prop_m2, Prop_o2)   
+        extraction_query3 = generate_extraction_query(targetSchema, C3, Prop_m3, Prop_o3)
+
+        print("Query Generatd for target class TVSeries: \n" + str(extraction_query1) + "\n\n")
+        print("Query Generatd for target class Person: \n" + str(extraction_query2) + "\n\n")
+        print("Query Generatd for target class Person: \n" + str(extraction_query3) + "\n\n")
+
+    elif args.input == "runningExample":
+        pathShapes = "/Sources/runningExample.ttl"
+        C1 = "http://example.com/ns#Journal"
+        Prop_m1 = ["http://example.com/ns#journalName", "http://example.com/ns#issn"]
+        Prop_o1 = []
+        C2 = "http://example.com/ns#Author"
+        Prop_m2 = ["http://example.com/ns#fullName", "http://example.com/ns#affiliation"]
+        Prop_o2 = ["http://example.com/ns#ex:orcid", "http://example.com/ns#notes"]
+        C3 = "http://example.com/ns#Conference"
+        Prop_m3 = ["http://example.com/ns#confName", "http://example.com/ns#location","http://example.com/ns#date"]
+        Prop_o3 = []
+        C4 = "http://example.com/ns#Article"
+        Prop_m4 = ["http://example.com/ns#title", "http://example.com/ns#date", "http://example.com/ns#publishedIn", "http://example.com/ns#presentedAt", "http://example.com/ns#hasAuthor"]
+        Prop_o4 = ["http://example.com/ns#abstract", "http://example.com/ns#keyword"]
+
+        targetSchema.parse(pathShapes, format="ttl")
+        # Skolemise le graphe pour remplacer les blank nodes par des IRIs stables.
+        targetSchema = targetSchema.skolemize()
+        extraction_query1 = generate_extraction_query(targetSchema, C1, Prop_m1, Prop_o1)
+        extraction_query2 = generate_extraction_query(targetSchema, C2, Prop_m2, Prop_o2)
+        extraction_query3 = generate_extraction_query(targetSchema, C3, Prop_m3, Prop_o3)
+        extraction_query4 = generate_extraction_query(targetSchema, C4, Prop_m4, Prop_o4)
+
+        print("Query Generatd for target class Journal: \n" + str(extraction_query1) + "\n\n")
+        print("Query Generatd for target class Author: \n" + str(extraction_query2) + "\n\n")
+        print("Query Generatd for target class Conference: \n" + str(extraction_query3) + "\n\n")
+        print("Query Generatd for target class Article: \n" + str(extraction_query4) + "\n\n")
+
+    elif args.input == "one_simple":
+        pathShapes = "/Sources/shape-single-simple.ttl"
+        C = "http://example.com/ns#ExampleClass"
+        Prop_m = ["http://example.com/ns#randomProperty"]
+        Prop_o = []
+
+        targetSchema.parse(pathShapes, format="ttl")
+        # Skolemise le graphe pour remplacer les blank nodes par des IRIs stables.
+        targetSchema = targetSchema.skolemize()
+        extraction_query = generate_extraction_query(targetSchema, C, Prop_m, Prop_o)
+        print("Query Generatd for target class ExampleClass: \n" + str(extraction_query) + "\n\n")
+    
+    elif args.input == "one_complex":
+        pathShapes = "/Sources/shape-single-complex.ttl"
+        C = "http://example.com/ns#ExampleClass"
+        Prop_m = ["http://example.com/ns#randomProperty", "http://example.com/ns#anotherRandomProperty", "http://example.com/ns#date1", "http://example.com/ns#date2"]
+        Prop_o = []
+
+        targetSchema.parse(pathShapes, format="ttl")
+        # Skolemise le graphe pour remplacer les blank nodes par des IRIs stables.
+        targetSchema = targetSchema.skolemize()
+        extraction_query = generate_extraction_query(targetSchema, C, Prop_m, Prop_o)
+        print("Query Generatd for target class ExampleClass: \n" + str(extraction_query) + "\n\n")
+    
+    elif args.input == "three_simple":
+        pathShapes = "/Sources/shape-three-simple.ttl"
+        C1 = "http://example.com/ns#ExampleClass"
+        Prop_m1 = ["http://example.com/ns#randomProperty", "http://example.com/ns#firstConnectingProperty", "http://example.com/ns#secondConnectionProperty"]
+        Prop_o1 = []
+        C2 = "http://example.com/ns#Address"
+        Prop_m2 = ["http://example.com/ns#addressValue"]
+        Prop_o2 = []
+        C3 = "http://example.com/ns#Phone"
+        Prop_m3 = ["http://example.com/ns#phoneValue"]
+        Prop_o3= []
+
+        targetSchema.parse(pathShapes, format="ttl")
+        # Skolemise le graphe pour remplacer les blank nodes par des IRIs stables.
+        targetSchema = targetSchema.skolemize()
+        extraction_query1 = generate_extraction_query(targetSchema, C1, Prop_m1, Prop_o1)
+        extraction_query2 = generate_extraction_query(targetSchema, C2, Prop_m2, Prop_o2)
+        extraction_query3 = generate_extraction_query(targetSchema, C3, Prop_m3, Prop_o3)
+        print("Query Generatd for target class ExampleClass: \n" + str(extraction_query1) + "\n\n")
+        print("Query Generatd for target class Address: \n" + str(extraction_query2) + "\n\n")
+        print("Query Generatd for target class Phone: \n" + str(extraction_query3) + "\n\n")
+
+    elif args.input == "three_complex":
+        pathShapes = "/Sources/shape-three-complex.ttl"
+        C1 = "http://example.com/ns#ExampleClass"
+        Prop_m1 = ["http://example.com/ns#randomProperty","http://example.com/ns#anotherRandomProperty", "http://example.com/ns#firstConnectingProperty", "http://example.com/ns#secondConnectionProperty"]
+        Prop_o1 = []
+        C2 = "http://example.com/ns#Address"
+        Prop_m2 = ["http://example.com/ns#addressValue"]
+        Prop_o2 = []
+        C3 = "http://example.com/ns#Date"
+        Prop_m3 = ["http://example.com/ns#date1","http://example.com/ns#date2" ]
+        Prop_o3= []
+
+        targetSchema.parse(pathShapes, format="ttl")
+        # Skolemise le graphe pour remplacer les blank nodes par des IRIs stables.
+        targetSchema = targetSchema.skolemize()
+
+        extraction_query1 = generate_extraction_query(targetSchema, C1, Prop_m1, Prop_o1)
+        extraction_query2 = generate_extraction_query(targetSchema, C2, Prop_m2, Prop_o2)
+        extraction_query3 = generate_extraction_query(targetSchema, C3, Prop_m3, Prop_o3)
+
+        print("Query Generatd for target class ExampleClass: \n" + str(extraction_query1) + "\n\n")
+        print("Query Generatd for target class Address: \n" + str(extraction_query2) + "\n\n")
+        print("Query Generatd for target class Date: \n" + str(extraction_query3) + "\n\n")
+    
+
 
 if __name__ == '__main__':
-
-    """#book_shape configuration
-    pathShapes = "C:/Users/zoech/Documents/Jupyter Notebook/Code/book_shape.ttl"
-    C1 = "http://schema.org/Book"
-    Prop_m1 = ["http://schema.org/identifier", "http://schema.org/name", "http://schema.org/bookEdition", "http://schema.org/isbn",
-             "http://schema.org/numberOfPages", "http://schema.org/author", "http://schema.org/dateCreated", "http://schema.org/datePublished",
-             "http://schema.org/genre", "http://schema.org/award", "http://schema.org/inLanguage"]
-    Prop_o1 = []
-    C2 = "http://schema.org/Person"
-    Prop_m2 = ["http://schema.org/givenName", "http://schema.org/bithDate", "http://schema.org/gender",  "http://schema.org/email",
-               "http://schema.org/telephone"]
-    Prop_o2 = [ "http://schema.org/deathDate"]"""
-    
-
-    """#Config : Shape Single Simple 
-    pathShapes = "C:/Users/zoech/Documents/Jupyter Notebook/Code/shapes_to_test/shape-single-simple.ttl"
-    C = "http://example.com/ns#ExampleClass"
-    Prop_m = ["http://example.com/ns#randomProperty"]
-    Prop_o = []"""
-
-    """#Config : Shape Single Complex 
-    pathShapes = "C:/Users/zoech/Documents/Jupyter Notebook/Code/shapes_to_test/shape-single-complex.ttl"
-    C = "http://example.com/ns#ExampleClass"
-    Prop_m = ["http://example.com/ns#randomProperty", "http://example.com/ns#anotherRandomProperty", "http://example.com/ns#date1", "http://example.com/ns#date2"]
-    Prop_o = []"""
-
-    """#Config : Test Prop Shape Complex
-    pathShapes = "C:/Users/zoech/Documents/Jupyter Notebook/Code/shapes_to_test/propShapeComplex.ttl"
-    C = "http://example.com/ns#Person"
-    Prop_m = ["http://example.com/ns#age"]
-    Prop_o = []"""
-
-    """#Config : Shape Three Simple 
-    pathShapes = "C:/Users/zoech/Documents/Jupyter Notebook/Code/shapes_to_test/shape-three-simple.ttl"
-    C1 = "http://example.com/ns#ExampleClass"
-    Prop_m1 = ["http://example.com/ns#randomProperty", "http://example.com/ns#firstConnectingProperty", "http://example.com/ns#secondConnectionProperty"]
-    Prop_o1 = []
-    C2 = "http://example.com/ns#Address"
-    Prop_m2 = ["http://example.com/ns#addressValue"]
-    Prop_o2 = []
-    C3 = "http://example.com/ns#Phone"
-    Prop_m3 = ["http://example.com/ns#phoneValue"]
-    Prop_o3= []"""
-
-    """pathShapes = "C:/Users/zoech/Documents/Jupyter Notebook/Code/shapes_to_test/shape-three-complex.ttl"
-    C1 = "http://example.com/ns#ExampleClass"
-    Prop_m1 = ["http://example.com/ns#randomProperty","http://example.com/ns#anotherRandomProperty", "http://example.com/ns#firstConnectingProperty", "http://example.com/ns#secondConnectionProperty"]
-    Prop_o1 = []
-    C2 = "http://example.com/ns#Address"
-    Prop_m2 = ["http://example.com/ns#addressValue"]
-    Prop_o2 = []
-    C3 = "http://example.com/ns#Date"
-    Prop_m3 = ["http://example.com/ns#date1","http://example.com/ns#date2" ]
-    Prop_o3= []"""
-
-    """#Example_product_shape
-    pathShapes = "C:/Users/zoech/Documents/Jupyter Notebook/Code/shapes_to_test/example_product_shape.ttl"
-    C1 = "http://example.com/ns#Product"
-    Prop_m1 = ["http://example.com/ns#identifier", "http://example.com/ns#name", "http://example.com/ns#dateOrProduction","http://example.com/ns#dateOfExpiration"]
-    Prop_o1 = []"""
-
-    """#movie_shape configuration
-    pathShapes = "C:/Users/zoech/Documents/Jupyter Notebook/Code/shapes_to_test/movie_shape.ttl"
-    C1 = "http://schema.org/Movie"
-    Prop_m1 = ["http://schema.org/director", "http://schema.org/award", "http://schema.org/name", "http://schema.org/dateCreated",
-             "http://schema.org/datePublished","http://schema.org/genre","http://schema.org/inLanguage"]
-    Prop_o1 = []
-    C2 = "http://schema.org/Person"
-    Prop_m2 = ["http://schema.org/givenName", "http://schema.org/gender",  "http://schema.org/email",
-               "http://schema.org/telephone"]
-    Prop_o2 = []"""
-
-    """# Person_shape Configuration
-    pathShapes = "C:/Users/zoech/Documents/Jupyter Notebook/Code/shapes_to_test/person_shape.ttl"
-    C1 = "http://schema.org/Address"
-    Prop_m1 = ["http://schema.org/streetAddress", "http://schema.org/postalCode"]
-    Prop_o1 = []
-    C2 = "http://schema.org/Person"
-    Prop_m2 = ["http://schema.org/givenName", "http://schema.org/name","http://schema.org/familyName", "http://schema.org/bithDate",
-               "http://schema.org/gender",  "http://schema.org/email", "http://schema.org/jobTitle", "http://schema.org/address",
-               "http://schema.org/telephone"]
-    Prop_o2 = [ "http://schema.org/deathDate"]"""
-
-    """# TVSeries Configuration
-    pathShapes = "C:/Users/zoech/Documents/Jupyter Notebook/Code/shapes_to_test/tv_series_shape.ttl"
-    C1 = "http://schema.org/TVSeries"
-    Prop_m1 = ["http://schema.org/director", "http://schema.org/actor", "http://schema.org/season","http://schema.org/numberOfEpisodes",
-              "http://schema.org/numberOfSeasons","http://schema.org/startDate", "http://schema.org/endDate", "http://schema.org/datePublished", 
-               "http://schema.org/genre", "http://schema.org/titleEIDR","http://schema.org/name"]
-    Prop_o1 = []
-    C2 = "http://schema.org/Person"
-    Prop_m2 = ["http://schema.org/givenName", "http://schema.org/familyName","http://schema.org/gender",  
-                "http://schema.org/email", "http://schema.org/telephone"]
-    Prop_o2 = []
-
-    C3 = "http://schema.org/Person"
-    Prop_m3 = ["http://schema.org/gender","http://schema.org/name"]
-    Prop_o3 = []"""
-
-    #Running Example Configuration 
-    pathShapes = "C:/Users/zoech/Documents/Jupyter Notebook/Code/shapes_to_test/runningExample.ttl"
-    C1 = "http://example.com/ns#Journal"
-    Prop_m1 = ["http://example.com/ns#journalName", "http://example.com/ns#issn"]
-    Prop_o1 = []
-    C2 = "http://example.com/ns#Author"
-    Prop_m2 = ["http://example.com/ns#fullName", "http://example.com/ns#affiliation"]
-    Prop_o2 = ["http://example.com/ns#ex:orcid", "http://example.com/ns#notes"]
-    C3 = "http://example.com/ns#Conference"
-    Prop_m3 = ["http://example.com/ns#confName", "http://example.com/ns#location","http://example.com/ns#date"]
-    Prop_o3 = []
-    C4 = "http://example.com/ns#Article"
-    Prop_m4 = ["http://example.com/ns#title", "http://example.com/ns#date", "http://example.com/ns#publishedIn", "http://example.com/ns#presentedAt", "http://example.com/ns#hasAuthor"]
-    Prop_o4 = ["http://example.com/ns#abstract", "http://example.com/ns#keyword"]
-    
-    
-    
-
-    
-    
-    targetSchema = Graph()
-    targetSchema.parse(pathShapes, format="ttl")
-    # Skolemise le graphe pour remplacer les blank nodes par des IRIs stables.
-    targetSchema = targetSchema.skolemize()
-    
-    temps_execution = []
-    #for i in range (25):
-    debut = time.time()  # Capture le temps de début
-    extraction_query1 = generate_extraction_query(targetSchema, C1, Prop_m1, Prop_o1)
-    extraction_query2 = generate_extraction_query(targetSchema, C2, Prop_m2, Prop_o2)
-    extraction_query3 = generate_extraction_query(targetSchema, C3, Prop_m3, Prop_o3)
-    extraction_query4 = generate_extraction_query(targetSchema, C4, Prop_m4, Prop_o4)
-    fin = time.time()  # Capture le temps de fin
-    temps_execution.append(fin - debut)
-
-
-    # Calcul de la moyenne et de l'écart type
-    """moyenne = statistics.mean(temps_execution)
-    ecart_type = statistics.stdev(temps_execution)
-    
-    print(f"Moyenne du temps d'exécution : {moyenne:.6f} secondes")
-    print(f"Écart-type du temps d'exécution : {ecart_type:.6f} secondes")
-    print("\n\n")
-    print(extraction_query)"""
+    main()
 
