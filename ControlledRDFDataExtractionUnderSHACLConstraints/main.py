@@ -1,7 +1,8 @@
-from rdflib import Graph, URIRef, BNode
+import rdflib
 import time
 import statistics
 import argparse
+from pathlib import Path
 
 # Function to resolve constraints for Property Shapes
 def property_shape_resolution(targetSchema, PS, Prop_m, Prop_o):
@@ -253,9 +254,9 @@ def format_resource(r):
     Format a resource for SPARQL queries.
     :param r: The resource to format, can be a BNode or URIRef. 
     """
-    if isinstance(r,BNode):
+    if isinstance(r,rdflib.BNode):
         return r.n3()
-    elif isinstance(r,URIRef):
+    elif isinstance(r,rdflib.URIRef):
         return f'<{str(r)}>'
     else :
         return f'<{str(r)}>'
@@ -346,12 +347,14 @@ def main():
     
     args = parser.parse_args()
 
-    targetSchema = Graph()
+    targetSchema = rdflib.Graph()
+    chemin_base = Path(__file__).parent
+
     if args.input not in ["book", "movie", "person", "product", "tvseries", "runningExample", "one_simple", "one_complex", "three_simple", "three_complex"]:
         print("This configuration is not none. Please enter a valid configuration.")
         return
     elif args.input == "book":
-        pathShapes = "/Sources/book_shape.ttl"
+        pathShapes = chemin_base / "Sources" / "book_shape.ttl"
         C1 = "http://schema.org/Book"
         Prop_m1 = ["http://schema.org/identifier", "http://schema.org/name", "http://schema.org/bookEdition", "http://schema.org/isbn",
                     "http://schema.org/numberOfPages", "http://schema.org/author", "http://schema.org/dateCreated", "http://schema.org/datePublished",
@@ -373,8 +376,9 @@ def main():
         print("Query Generatd for target class Person: \n" + str(extraction_query2) + "\n\n")
 
 
-    elif args.input == "movie":
-        pathShapes = "/Sources/movie_shape.ttl"
+    elif args.input ==  "movie":
+        
+        pathShapes = chemin_base / "Sources" / "movie_shape.ttl"
         C1 = "http://schema.org/Movie"
         Prop_m1 = ["http://schema.org/director", "http://schema.org/award", "http://schema.org/name", "http://schema.org/dateCreated",
                 "http://schema.org/datePublished","http://schema.org/genre","http://schema.org/inLanguage"]
@@ -393,8 +397,8 @@ def main():
         print("Query Generatd for target class Movie: \n" + str(extraction_query1) + "\n\n")
         print("Query Generatd for target class Person: \n" + str(extraction_query2) + "\n\n")
 
-    elif args.input == "person":
-        pathShapes = "/Sources/person_shape.ttl"
+    elif args.input ==  "person":
+        pathShapes = chemin_base / "Sources" / "person_shape.ttl"
         C1 = "http://schema.org/Address"
         Prop_m1 = ["http://schema.org/streetAddress", "http://schema.org/postalCode"]
         Prop_o1 = []
@@ -415,8 +419,8 @@ def main():
         print("Query Generatd for target class Person: \n" + str(extraction_query2) + "\n\n")
 
 
-    elif args.input == "product":
-        pathShapes = "/Sources/example_product_shape.ttl"
+    elif args.input ==  "product":
+        pathShapes = chemin_base / "Sources" / "example_product_shape.ttl"
         C1 = "http://example.com/ns#Product"
         Prop_m1 = ["http://example.com/ns#identifier", "http://example.com/ns#name", "http://example.com/ns#dateOrProduction","http://example.com/ns#dateOfExpiration"]
         Prop_o1 = []
@@ -428,8 +432,8 @@ def main():
         extraction_query1 = generate_extraction_query(targetSchema, C1, Prop_m1, Prop_o1)
         print("Query Generatd for target class Product: \n" + str(extraction_query1) + "\n\n")
 
-    elif args.input == "tvseries":
-        pathShapes = "/Sources/tv_series_shape.ttl"
+    elif args.input ==  "tvseries":
+        pathShapes = chemin_base / "Sources" / "tv_series_shape.ttl"
         C1 = "http://schema.org/TVSeries"
         Prop_m1 = ["http://schema.org/director", "http://schema.org/actor", "http://schema.org/season","http://schema.org/numberOfEpisodes",
                 "http://schema.org/numberOfSeasons","http://schema.org/startDate", "http://schema.org/endDate", "http://schema.org/datePublished", 
@@ -456,8 +460,8 @@ def main():
         print("Query Generatd for target class Person: \n" + str(extraction_query2) + "\n\n")
         print("Query Generatd for target class Person: \n" + str(extraction_query3) + "\n\n")
 
-    elif args.input == "runningExample":
-        pathShapes = "/Sources/runningExample.ttl"
+    elif args.input ==  "runningExample":
+        pathShapes = chemin_base / "Sources" / "runningExample.ttl"
         C1 = "http://example.com/ns#Journal"
         Prop_m1 = ["http://example.com/ns#journalName", "http://example.com/ns#issn"]
         Prop_o1 = []
@@ -484,7 +488,7 @@ def main():
         print("Query Generatd for target class Conference: \n" + str(extraction_query3) + "\n\n")
         print("Query Generatd for target class Article: \n" + str(extraction_query4) + "\n\n")
 
-    elif args.input == "one_simple":
+    elif args.input ==  chemin_base +  "one_simple":
         pathShapes = "/Sources/shape-single-simple.ttl"
         C = "http://example.com/ns#ExampleClass"
         Prop_m = ["http://example.com/ns#randomProperty"]
@@ -496,7 +500,7 @@ def main():
         extraction_query = generate_extraction_query(targetSchema, C, Prop_m, Prop_o)
         print("Query Generatd for target class ExampleClass: \n" + str(extraction_query) + "\n\n")
     
-    elif args.input == "one_complex":
+    elif args.input ==  chemin_base +  "one_complex":
         pathShapes = "/Sources/shape-single-complex.ttl"
         C = "http://example.com/ns#ExampleClass"
         Prop_m = ["http://example.com/ns#randomProperty", "http://example.com/ns#anotherRandomProperty", "http://example.com/ns#date1", "http://example.com/ns#date2"]
@@ -508,7 +512,7 @@ def main():
         extraction_query = generate_extraction_query(targetSchema, C, Prop_m, Prop_o)
         print("Query Generatd for target class ExampleClass: \n" + str(extraction_query) + "\n\n")
     
-    elif args.input == "three_simple":
+    elif args.input ==  chemin_base + "three_simple":
         pathShapes = "/Sources/shape-three-simple.ttl"
         C1 = "http://example.com/ns#ExampleClass"
         Prop_m1 = ["http://example.com/ns#randomProperty", "http://example.com/ns#firstConnectingProperty", "http://example.com/ns#secondConnectionProperty"]
@@ -531,7 +535,7 @@ def main():
         print("Query Generatd for target class Phone: \n" + str(extraction_query3) + "\n\n")
 
     elif args.input == "three_complex":
-        pathShapes = "/Sources/shape-three-complex.ttl"
+        pathShapes =  chemin_base + "/Sources/shape-three-complex.ttl"
         C1 = "http://example.com/ns#ExampleClass"
         Prop_m1 = ["http://example.com/ns#randomProperty","http://example.com/ns#anotherRandomProperty", "http://example.com/ns#firstConnectingProperty", "http://example.com/ns#secondConnectionProperty"]
         Prop_o1 = []
@@ -554,7 +558,6 @@ def main():
         print("Query Generatd for target class Address: \n" + str(extraction_query2) + "\n\n")
         print("Query Generatd for target class Date: \n" + str(extraction_query3) + "\n\n")
     
-
 
 if __name__ == '__main__':
     main()

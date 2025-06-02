@@ -1,0 +1,89 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix ex: <http://example.com/ns#> .
+
+ex:JournalShape a sh:NodeShape;
+	sh:targetClass ex:Journal; 
+	sh:property ex:journalNameShape; 
+	sh:property ex:issnShape.
+
+ex:journalNameShape a sh:PropertyShape;
+	sh:path ex:journalName;
+	sh:datatype xsd:string;
+	sh:minCount 1.
+
+ex:issnShape a sh:PropertyShape;
+	sh:path ex:issn;
+	sh:pattern "^\\d{4}-\\d{3}[0-9X]$".
+
+
+
+ex:AuthorShape a sh:NodeShape; 
+	sh:targetClass ex:Author;
+	sh:property ex:fullNameShape;
+	sh:property ex:affiliationShape.
+
+ex:fullNameShape a sh:PropertyShape; 
+	sh:path ex:fullName;
+	sh:datatype xsd:string; 
+	sh:minCount 1.
+
+ex:affiliationShape a sh:PropertyShape; 
+	sh:path ex:affiliation;
+	sh:minCount 1. 
+
+
+ex:ConferenceShape a sh:NodeShape; 
+	sh:targetClass ex:Conference; 
+	sh:and (ex:elt1 ex:elt2);
+	sh:property ex:dateShape.
+
+ex:elt1 a sh:NodeShape; 
+	sh:property ex:confNameShape. 
+
+ex:elt2 a sh:NodeShape;
+	sh:property ex:locationShape.
+
+ex:confNameShape a sh:PropertyShape; 
+	sh:path ex:confName;
+	sh:datatype xsd:string;
+	sh:minCount 1.
+
+ex:locationShape a sh:PropertyShape; 
+	sh:path ex:location;
+	sh:datatype xsd:string. 
+
+ex:dateShape a sh:PropertyShape; 
+	sh:path ex:date;
+	sh:datatype xsd:date. 
+
+
+ex:ArticleShape a sh:NodeShape; 
+	sh:targetClass ex:Article;
+	sh:property ex:titleShape; 
+	sh:property ex:dateShape; 
+	sh:or (ex:publishedInShape ex:presentedAtShape); 
+	sh:property ex:hasAuthorShape.
+
+ex:titleShape a sh:PropertyShape; 
+	sh:path ex:title;
+	sh:datatype xsd:string;
+	sh:minCount 1. 
+
+ex:dateShape a sh:PropertyShape;
+	sh:path ex:date; 
+	sh:datatype xsd:date;
+	sh:maxCount 1. 
+
+ex:publishedInShape a sh:PropertyShape;
+	sh:path ex:publishedIn;
+	sh:class ex:Journal.
+
+ex:presentedAtShape a sh:PropertyShape;
+	sh:path ex:presentedAt;
+	sh:class ex:Conference. 
+
+ex:hasAuthorShape a sh:PropertyShape;
+	sh:path ex:hasAuthor;
+	sh:class ex:Author; 
+	sh:minCount 1.
