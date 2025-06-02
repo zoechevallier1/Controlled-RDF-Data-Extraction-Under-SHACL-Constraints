@@ -344,6 +344,7 @@ def basic_constraint_resolution(p, propsh, k, Prop_m, Prop_o):
 def main():
     parser = argparse.ArgumentParser(description="Mon script avec paramètres")
     parser.add_argument("--input", type=str, required=True, help="book, movie, person, product, tvseries,one_simple, one_complex, three_simple, three_complex, runningExample")
+    parser.add_argument("--time", type=str, required=False, default="False", help="True or False to print the time of execution of the query")
     
     args = parser.parse_args()
 
@@ -369,8 +370,12 @@ def main():
         # Skolemise le graphe pour remplacer les blank nodes par des IRIs stables.
         targetSchema = targetSchema.skolemize()
 
+        start_time = time.time()
         extraction_query1 = generate_extraction_query(targetSchema, C1, Prop_m1, Prop_o1)
         extraction_query2 = generate_extraction_query(targetSchema, C2, Prop_m2, Prop_o2)
+        end_time = time.time()
+        if args.time == "True":
+            print("Time to generate the queries: " + str(end_time - start_time) + " seconds")
 
         print("Query Generatd for target class Book: \n" + str(extraction_query1) + "\n\n")
         print("Query Generatd for target class Person: \n" + str(extraction_query2) + "\n\n")
@@ -391,8 +396,14 @@ def main():
         targetSchema.parse(pathShapes, format="ttl")
         # Skolemise le graphe pour remplacer les blank nodes par des IRIs stables.
         targetSchema = targetSchema.skolemize()
+
+        start_time = time.time()
         extraction_query1 = generate_extraction_query(targetSchema, C1, Prop_m1, Prop_o1)
         extraction_query2 = generate_extraction_query(targetSchema, C2, Prop_m2, Prop_o2)
+        end_time = time.time()
+        if args.time == "True": 
+            print("Time to generate the queries: " + str(end_time - start_time) + " seconds")
+
 
         print("Query Generatd for target class Movie: \n" + str(extraction_query1) + "\n\n")
         print("Query Generatd for target class Person: \n" + str(extraction_query2) + "\n\n")
@@ -411,9 +422,12 @@ def main():
         targetSchema.parse(pathShapes, format="ttl")
         # Skolemise le graphe pour remplacer les blank nodes par des IRIs stables.
         targetSchema = targetSchema.skolemize()
-
+        start_time = time.time()
         extraction_query1 = generate_extraction_query(targetSchema, C1, Prop_m1, Prop_o1)
         extraction_query2 = generate_extraction_query(targetSchema, C2, Prop_m2, Prop_o2)
+        end_time = time.time()
+        if args.time == "True":
+            print("Time to generate the queries: " + str(end_time - start_time) + " seconds")
 
         print("Query Generatd for target class Address: \n" + str(extraction_query1) + "\n\n")
         print("Query Generatd for target class Person: \n" + str(extraction_query2) + "\n\n")
@@ -428,8 +442,11 @@ def main():
         targetSchema.parse(pathShapes, format="ttl")
         # Skolemise le graphe pour remplacer les blank nodes par des IRIs stables.
         targetSchema = targetSchema.skolemize()
-
+        start_time = time.time()
         extraction_query1 = generate_extraction_query(targetSchema, C1, Prop_m1, Prop_o1)
+        end_time = time.time()
+        if args.time == "True":
+            print("Time to generate the queries: " + str(end_time - start_time) + " seconds")
         print("Query Generatd for target class Product: \n" + str(extraction_query1) + "\n\n")
 
     elif args.input ==  "tvseries":
@@ -452,9 +469,14 @@ def main():
         # Skolemise le graphe pour remplacer les blank nodes par des IRIs stables.
         targetSchema = targetSchema.skolemize()
 
+        start_time = time.time()
+
         extraction_query1 = generate_extraction_query(targetSchema, C1, Prop_m1, Prop_o1)
         extraction_query2 = generate_extraction_query(targetSchema, C2, Prop_m2, Prop_o2)   
         extraction_query3 = generate_extraction_query(targetSchema, C3, Prop_m3, Prop_o3)
+        end_time = time.time()
+        if args.time == "True": 
+            print("Time to generate the queries: " + str(end_time - start_time) + " seconds")
 
         print("Query Generatd for target class TVSeries: \n" + str(extraction_query1) + "\n\n")
         print("Query Generatd for target class Person: \n" + str(extraction_query2) + "\n\n")
@@ -478,10 +500,14 @@ def main():
         targetSchema.parse(pathShapes, format="ttl")
         # Skolemise le graphe pour remplacer les blank nodes par des IRIs stables.
         targetSchema = targetSchema.skolemize()
+        start_time = time.time()
         extraction_query1 = generate_extraction_query(targetSchema, C1, Prop_m1, Prop_o1)
         extraction_query2 = generate_extraction_query(targetSchema, C2, Prop_m2, Prop_o2)
         extraction_query3 = generate_extraction_query(targetSchema, C3, Prop_m3, Prop_o3)
         extraction_query4 = generate_extraction_query(targetSchema, C4, Prop_m4, Prop_o4)
+        end_time = time.time()
+        if args.time == "True":
+            print("Time to generate the queries: " + str(end_time - start_time) + " seconds")
 
         print("Query Generatd for target class Journal: \n" + str(extraction_query1) + "\n\n")
         print("Query Generatd for target class Author: \n" + str(extraction_query2) + "\n\n")
@@ -497,7 +523,11 @@ def main():
         targetSchema.parse(pathShapes, format="ttl")
         # Skolemise le graphe pour remplacer les blank nodes par des IRIs stables.
         targetSchema = targetSchema.skolemize()
+        start_time = time.time()
         extraction_query = generate_extraction_query(targetSchema, C, Prop_m, Prop_o)
+        end_time = time.time()
+        if args.time == "True":
+            print("Time to generate the queries: " + str(end_time - start_time) + " seconds")
         print("Query Generatd for target class ExampleClass: \n" + str(extraction_query) + "\n\n")
     
     elif args.input ==  chemin_base +  "one_complex":
@@ -509,7 +539,11 @@ def main():
         targetSchema.parse(pathShapes, format="ttl")
         # Skolemise le graphe pour remplacer les blank nodes par des IRIs stables.
         targetSchema = targetSchema.skolemize()
+        start_time = time.time()
         extraction_query = generate_extraction_query(targetSchema, C, Prop_m, Prop_o)
+        end_time = time.time()
+        if args.time == "True": 
+            print("Time to generate the queries: " + str(end_time - start_time) + " seconds")
         print("Query Generatd for target class ExampleClass: \n" + str(extraction_query) + "\n\n")
     
     elif args.input ==  chemin_base + "three_simple":
@@ -527,9 +561,13 @@ def main():
         targetSchema.parse(pathShapes, format="ttl")
         # Skolemise le graphe pour remplacer les blank nodes par des IRIs stables.
         targetSchema = targetSchema.skolemize()
+        start_time = time.time()
         extraction_query1 = generate_extraction_query(targetSchema, C1, Prop_m1, Prop_o1)
         extraction_query2 = generate_extraction_query(targetSchema, C2, Prop_m2, Prop_o2)
         extraction_query3 = generate_extraction_query(targetSchema, C3, Prop_m3, Prop_o3)
+        end_time = time.time()
+        if args.time == "True":
+            print("Time to generate the queries: " + str(end_time - start_time) + " seconds")
         print("Query Generatd for target class ExampleClass: \n" + str(extraction_query1) + "\n\n")
         print("Query Generatd for target class Address: \n" + str(extraction_query2) + "\n\n")
         print("Query Generatd for target class Phone: \n" + str(extraction_query3) + "\n\n")
@@ -549,10 +587,13 @@ def main():
         targetSchema.parse(pathShapes, format="ttl")
         # Skolemise le graphe pour remplacer les blank nodes par des IRIs stables.
         targetSchema = targetSchema.skolemize()
-
+        start_time = time.time()
         extraction_query1 = generate_extraction_query(targetSchema, C1, Prop_m1, Prop_o1)
         extraction_query2 = generate_extraction_query(targetSchema, C2, Prop_m2, Prop_o2)
         extraction_query3 = generate_extraction_query(targetSchema, C3, Prop_m3, Prop_o3)
+        end_time = time.time()
+        if args.time == "True":
+            print("Time to generate the queries: " + str(end_time - start_time) + " seconds")
 
         print("Query Generatd for target class ExampleClass: \n" + str(extraction_query1) + "\n\n")
         print("Query Generatd for target class Address: \n" + str(extraction_query2) + "\n\n")
