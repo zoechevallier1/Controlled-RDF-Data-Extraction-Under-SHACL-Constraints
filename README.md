@@ -4,6 +4,7 @@ We address the problem of populating a schema from RDF datasets by automatically
 
 ## Usage 
 To execute the code, you can use the following command: python ControlledRDFDataExtractionUnderSHACLConstraints/main.py --input runningExample (--time True)
+
 If you want to have the time needed to generate the queries, you can add --time True. 
 With this execution, you will get query generated for each target class of the example.
 
