@@ -18,4 +18,4 @@ You can switch use case by replacing runningExample in the command by one of the
 - three_complex
 
 ## Sources
-The input SHACL shapes are available in repository Sources
+The input SHACL shapes are available in repository Sources. Each file correspond to the shapes used in the different use cases. Target classes, with their associated mandatory and optional properties have directly been added to the code. 
